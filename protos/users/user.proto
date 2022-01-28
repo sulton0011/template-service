@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package users;
+
+service UserService {
+    rpc Create(User) returns (User);
+    rpc Get(IdReq) returns (User);
+    rpc List(ListReq) returns (ListResp);
+    rpc Update(User) returns (User);
+    rpc Delete(IdReq) returns (EmptyResp);
+}
+
+message EmptyResp {}
+
+message User {
+    int64 id = 1;
+    string fname = 2;
+    string lname = 3;
+    string username = 4;
+    string email = 5;
+}
+
+message IdReq{
+    int64 id = 1;
+}
+
+message ListReq {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+message ListResp {
+  repeated User users = 1;
+  int64 count = 2;
+}
+
