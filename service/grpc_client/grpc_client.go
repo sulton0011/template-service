@@ -1,7 +1,7 @@
 package grpcClient
 
 import (
-    "github.com/sulton0011/home_work/microservice/config"
+    "home_work/task-service/config"
 )
 
 //GrpcClientI ...
