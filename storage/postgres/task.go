@@ -70,6 +70,7 @@ func (r *TaskRepo) Get(id string) (*pb.Task, error) {
             status
         FROM tasks
         WHERE id = $1
+		AND deleted_at IS NULL
     `
 	var task pb.Task
 	err := r.db.DB.QueryRow(query,
@@ -99,6 +100,7 @@ func (r *TaskRepo) List(req *pb.ListReq) (*pb.ListResp, error) {
 			deadline,
 			status
 		FROM tasks
+		WHERE deleted_at IS NULL
 		LIMIT $1
 		OFFSET $2
 	`
@@ -124,6 +126,7 @@ func (r *TaskRepo) List(req *pb.ListReq) (*pb.ListResp, error) {
 	}
 	query = `
 		SELECT count(*) FROM tasks
+		WHERE deleted_at IS NULL
 	`
 	err = r.db.DB.QueryRow(query).Scan(&resp.Count)
 	if err != nil {
@@ -144,6 +147,7 @@ func (r *TaskRepo) Update(Task *pb.Task) (*pb.Task, error) {
             status = $5,
             updated_at = $6
         WHERE id = $7
+		AND deleted_at IS NULL
         RETURNING id
     `
 	Task.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
@@ -178,4 +182,55 @@ func (r *TaskRepo) Delete(id *pb.IdReq) (*pb.EmptyResp, error) {
 		return nil, err
 	}
 	return &pb.EmptyResp{}, nil
+}
+
+// ListOverdue task ...
+func (r *TaskRepo) ListOverdue(req *pb.ListOverReq) (*pb.ListOverResp, error) {
+	offset := (req.Page - 1) * req.Limit
+	var resp pb.ListOverResp
+	query := `
+		SELECT 
+			assignee,
+			title,
+			summary,
+			deadline,
+			status,
+			created_at
+		FROM tasks
+		WHERE deadline < $1
+		AND deleted_at IS NULL
+		LIMIT $2
+		OFFSET $3
+	`
+	rows, err := r.db.DB.Query(query, req.Time, req.Limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var task pb.Task
+		err = rows.Scan(
+			&task.Assignee,
+			&task.Title,
+			&task.Summary,
+			&task.Deadline,
+			&task.Status,
+			&task.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		resp.Tasks = append(resp.Tasks, &task)
+	}
+	query = `
+		SELECT count(*) FROM tasks 
+		WHERE deadline < $1
+		AND deleted_at IS NULL
+	`
+	err = r.db.DB.QueryRow(query, req.Time).Scan(&resp.Count)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }

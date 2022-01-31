@@ -11,4 +11,5 @@ type TaskStorageI interface {
 	List(*pb.ListReq) (*pb.ListResp, error)
 	Update(*pb.Task) (*pb.Task, error)
 	Delete(*pb.IdReq) (*pb.EmptyResp, error)
+	ListOverdue(*pb.ListOverReq) (*pb.ListOverResp, error)
 }
