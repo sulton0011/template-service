@@ -1,10 +1,11 @@
 package postgres
 
 import (
+	"database/sql"
 	pb "home_work/task-service/genproto/task"
 	"time"
 
-	"github.com/google/uuid"
+	
 	"github.com/jmoiron/sqlx"
 )
 
@@ -42,7 +43,6 @@ func (r *TaskRepo) Create(Task *pb.Task) (*pb.Task, error) {
         RETURNING id
     `
 	Task.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
-	Task.Id = uuid.New().String()
 
 	err := r.db.DB.QueryRow(query,
 		Task.Id,
@@ -152,7 +152,7 @@ func (r *TaskRepo) Update(Task *pb.Task) (*pb.Task, error) {
     `
 	Task.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
 
-	err := r.db.DB.QueryRow(query,
+	result,err := r.db.DB.Exec(query,
 		Task.Assignee,
 		Task.Title,
 		Task.Summary,
@@ -161,11 +161,19 @@ func (r *TaskRepo) Update(Task *pb.Task) (*pb.Task, error) {
 		Task.UpdatedAt,
 
 		Task.Id,
-	).Scan(&Task.Id)
+	)
 	if err != nil {
 		return nil, err
 	}
-	return r.Get(Task.Id)
+	i,_:=result.RowsAffected();
+	if i==0 {
+		return nil,sql.ErrNoRows
+	}
+	task,err := r.Get(Task.Id)
+	if err != nil {
+		return nil,err
+	}
+	return task,nil
 }
 
 // Delete task ...

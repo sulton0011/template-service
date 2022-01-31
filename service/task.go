@@ -7,6 +7,7 @@ import (
 	l "home_work/task-service/pkg/logger"
 	"home_work/task-service/storage"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -26,10 +27,11 @@ func NewTaskService(db *sqlx.DB, log l.Logger) *TaskService {
 
 // Create Task ...
 func (s *TaskService) Create(ctx context.Context, req *pb.Task) (*pb.Task, error) {
+	req.Id = uuid.New().String()
 	task, err := s.storage.Task().Create(req)
 	if err != nil {
 		s.logger.Error("Error create task", l.Error(err))
-		return nil, nil
+		return nil, err
 	}
 	return task, nil
 }
@@ -39,38 +41,38 @@ func (s *TaskService) Get(ctx context.Context, req *pb.IdReq) (*pb.Task, error) 
 	task, err := s.storage.Task().Get(req.Id)
 	if err != nil {
 		s.logger.Error("Error get task", l.Error(err))
-		return nil, nil
+		return nil, err
 	}
 	return task, nil
 }
 
 // List Tasks ...
 func (s *TaskService) List(ctx context.Context, req *pb.ListReq) (*pb.ListResp, error) {
-    resp, err := s.storage.Task().List(req)
-    if err != nil {
-        s.logger.Error("Error list tasks", l.Error(err))
-        return nil, nil
-    }
+	resp, err := s.storage.Task().List(req)
+	if err != nil {
+		s.logger.Error("Error list tasks", l.Error(err))
+		return nil, err
+	}
 	return resp, nil
 }
 
 // Update task
 func (s *TaskService) Update(ctx context.Context, req *pb.Task) (*pb.Task, error) {
-    task, err := s.storage.Task().Update(req)
-    if err != nil {
-        s.logger.Error("Error update task")
-        return nil, nil
-    }
+	task, err := s.storage.Task().Update(req)
+	if err != nil {
+		s.logger.Error("Error update task", l.Error(err))
+		return nil, err
+	}
 	return task, nil
 }
 
 // Delete task
 func (s *TaskService) Delete(ctx context.Context, req *pb.IdReq) (*pb.EmptyResp, error) {
-    _, err := s.storage.Task().Delete(req)
-    if err != nil {
-        s.logger.Error("Error delete task")
-        return nil, nil
-    }
+	_, err := s.storage.Task().Delete(req)
+	if err != nil {
+		s.logger.Error("Error delete task", l.Error(err))
+		return nil, err
+	}
 	return &pb.EmptyResp{}, nil
 }
 
@@ -79,7 +81,7 @@ func (s *TaskService) ListOverdue(ctx context.Context, req *pb.ListOverReq) (*pb
 	tasks, err := s.storage.Task().ListOverdue(req)
 	if err != nil {
 		s.logger.Error("Error list overdue task", l.Error(err))
-		return nil, nil
+		return nil, err
 	}
 	return tasks, nil
 }
