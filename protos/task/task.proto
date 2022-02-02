@@ -18,11 +18,11 @@ message Task {
     string assignee = 2;
     string title = 3;
     string summary = 4;
-    time deadline = 5;
+    string deadline = 5;
     string status = 6;
-    time created_at = 7;
-    time updated_at = 8;
-    time deleted_at = 9;
+    string created_at = 7;
+    string updated_at = 8;
+    string deleted_at = 9;
 }
 
 message IdReq{
