@@ -63,11 +63,13 @@ func (r *TaskRepo) Create(Task *pb.Task) (*pb.Task, error) {
 func (r *TaskRepo) Get(id string) (*pb.Task, error) {
 	query := `
         SELECT
+			id,
             assignee,
             title,
             summary,
             deadline,
-            status
+            status,
+			created_at
         FROM tasks
         WHERE id = $1
 		AND deleted_at IS NULL
@@ -76,11 +78,13 @@ func (r *TaskRepo) Get(id string) (*pb.Task, error) {
 	err := r.db.DB.QueryRow(query,
 		id,
 	).Scan(
+		&task.Id,
 		&task.Assignee,
 		&task.Title,
 		&task.Summary,
 		&task.Deadline,
 		&task.Status,
+		&task.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -94,11 +98,13 @@ func (r *TaskRepo) List(req *pb.ListReq) (*pb.ListResp, error) {
 	var resp pb.ListResp
 	query := `
 		SELECT 
+			id,
 			assignee,
 			title,
 			summary,
 			deadline,
-			status
+			status,
+			created_at
 		FROM tasks
 		WHERE deleted_at IS NULL
 		LIMIT $1
@@ -112,11 +118,13 @@ func (r *TaskRepo) List(req *pb.ListReq) (*pb.ListResp, error) {
 	for rows.Next() {
 		var task pb.Task
 		err = rows.Scan(
+			&task.Id,
 			&task.Assignee,
 			&task.Title,
 			&task.Summary,
 			&task.Deadline,
 			&task.Status,
+			&task.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -197,7 +205,8 @@ func (r *TaskRepo) ListOverdue(req *pb.ListOverReq) (*pb.ListOverResp, error) {
 	offset := (req.Page - 1) * req.Limit
 	var resp pb.ListOverResp
 	query := `
-		SELECT 
+		SELECT
+			id,
 			assignee,
 			title,
 			summary,
@@ -218,6 +227,7 @@ func (r *TaskRepo) ListOverdue(req *pb.ListOverReq) (*pb.ListOverResp, error) {
 	for rows.Next() {
 		var task pb.Task
 		err = rows.Scan(
+			&task.Id,
 			&task.Assignee,
 			&task.Title,
 			&task.Summary,
